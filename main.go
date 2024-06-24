@@ -58,7 +58,7 @@ func main() {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	})
 	//var router Router
-	fmt.Println("listening now on GAE default port of 8080")
+	fmt.Println("LISTENING now on GAE default port of 8080")
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
