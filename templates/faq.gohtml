@@ -1,9 +1,10 @@
 <h1>FAQ page</h1>
 <ul>
-    <li>
-        <b> do you write blogs on this site?</b> Yes! blogs are coming up soon.
-    </li>
-        <li>
-        <b> is there a paid version?</b> Yes! we offer a paid versions.
-    </li>
+    {{range .}}
+        {{template "qa" .}}
+    {{end}}
 </ul>
+
+{{define "qa"}}
+<li><b>{{.Question}}</b> {{.Answer}}</li>
+{{end}}

@@ -14,12 +14,12 @@ import (
 func main() {
 	r := chi.NewRouter()
 	r.Get("/", controller.StaticHandler(
-		views.Must(views.ParseFS(templates.FS, "home.gohtml", "contact.gohtml"))))
+		views.Must(views.ParseFS(templates.FS, "home.gohtml", "layout-parts.gohtml"))))
 
 	r.Get("/contact", controller.StaticHandler(
-		views.Must(views.ParseFS(templates.FS, "contact.gohtml"))))
+		views.Must(views.ParseFS(templates.FS, "layout-page.gohtml", "contact.gohtml"))))
 
-	r.Get("/faq", controller.StaticHandler(
+	r.Get("/faq", controller.FAQ(
 		views.Must(views.ParseFS(templates.FS, "faq.gohtml"))))
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
