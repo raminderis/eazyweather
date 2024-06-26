@@ -1,0 +1,15 @@
+docker compose up 
+
+DROP TABLE IF EXISTS users;
+
+INSERT INTO users (age, email, first_name, last_name)
+VALUES (30, 'daminderis@live.com','Daminder','Kaur');
+
+INSERT INTO users (age, email, first_name, last_name)
+VALUES (40, 'raminderis@live.com','Raminder','Singh');
+
+SELECT * FROM users WHERE id=1;
+
+UPDATE users SET age=41, last_name='Sangh' WHERE age=40 AND first_name='Raminder';
+
+DELETE FROM users WHERE age=40 AND first_name='Raminder';
