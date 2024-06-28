@@ -23,8 +23,10 @@ func main() {
 	r.Get("/faq", controller.FAQ(
 		views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))
 
-	cfg := models.DefaultPostgresConfig()
-	db, err := models.Open(cfg)
+	//cfg := models.DefaultPostgresConfig()
+	//db, err := models.Open(cfg)
+	cfg := models.DefaultCloudSqlConfig()
+	db, err := models.ConnectWithConnector(cfg)
 	if err != nil {
 		panic(err)
 	}
