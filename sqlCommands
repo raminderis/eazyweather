@@ -2,6 +2,12 @@ docker compose up
 
 DROP TABLE IF EXISTS users;
 
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL
+);
+
 INSERT INTO users (age, email, first_name, last_name)
 VALUES (30, 'daminderis@live.com','Daminder','Kaur');
 
@@ -13,3 +19,6 @@ SELECT * FROM users WHERE id=1;
 UPDATE users SET age=41, last_name='Sangh' WHERE age=40 AND first_name='Raminder';
 
 DELETE FROM users WHERE age=40 AND first_name='Raminder';
+
+
+Users Model:
