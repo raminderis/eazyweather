@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/raminderis/lenslocked/controller"
+	"github.com/raminderis/lenslocked/models"
 	"github.com/raminderis/lenslocked/templates"
 	"github.com/raminderis/lenslocked/views"
 )
@@ -22,16 +23,32 @@ func main() {
 	r.Get("/faq", controller.FAQ(
 		views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))
 
-	usersC := controller.Users{}
+	cfg := models.DefaultPostgresConfig()
+	db, err := models.Open(cfg)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	userService := models.UserService{
+		DB: db,
+	}
+	usersC := controller.Users{
+		UserService: &userService,
+	}
 	usersC.Templates.New = views.Must(views.ParseFS(
 		templates.FS,
 		"signup.gohtml", "tailwind.gohtml",
 	))
 	r.Get("/signup", usersC.New)
+
 	r.Post("/users", usersC.Create)
 
-	r.Get("/signin", controller.StaticHandler(
-		views.Must(views.ParseFS(templates.FS, "signin.gohtml", "tailwind.gohtml"))))
+	usersC.Templates.SignIn = views.Must(views.ParseFS(
+		templates.FS,
+		"signin.gohtml", "tailwind.gohtml",
+	))
+	r.Get("/signin", usersC.SignIn)
+	r.Post("/users", usersC.ProcessSignIn)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
@@ -42,7 +59,7 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	err := http.ListenAndServe(":"+port, r)
+	err = http.ListenAndServe(":"+port, r)
 	if err != nil {
 		panic(err)
 	}
