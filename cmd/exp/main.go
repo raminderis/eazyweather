@@ -137,8 +137,3 @@ func main() {
 	// fmt.Println("Users created. id = ", id)
 
 }
-
-password with secret-key, hash is 93435c1a22a97eb31d56ee721b650d90cb17daf535b8f8d4727035e1cbf6821c
-password with secretkey, hash is  a86e7e2786d280e6b5b1f75776dff7e8a18a41cf989304cb5fb0e58522eaadca
-password with secret-key, hash is 93435c1a22a97eb31d56ee721b650d90cb17daf535b8f8d4727035e1cbf6821c
-93435c1a22a97eb31d56ee721b650d90cb17daf535b8f8d4727035e1cbf6821c with secret-key, hash is 498dc6a5fb762c46482a2417c8491ae1bf10435c6f501f278c0662ad5a16bb5b
