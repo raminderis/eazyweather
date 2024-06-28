@@ -44,6 +44,7 @@ func (c *csqlDialer) DialContext(ctx context.Context, network, addr string) (net
 	}
 	return c.dialer.Dial(ctx, c.connName, opts...)
 }
+
 func ConnectWithConnector(config CloudSqlConfig) (*sql.DB, error) {
 	dbURI := config.String()
 	c, err := mssql.NewConnector(dbURI)
