@@ -50,7 +50,7 @@ func main() {
 		"signin.gohtml", "tailwind.gohtml",
 	))
 	r.Get("/signin", usersC.SignIn)
-	r.Post("/users", usersC.ProcessSignIn)
+	r.Post("/login", usersC.ProcessSignIn)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)

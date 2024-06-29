@@ -49,21 +49,17 @@ func ConnectWithConnector(config CloudSqlConfig) (*sql.DB, error) {
 	dbURI := config.String()
 	c, err := mssql.NewConnector(dbURI)
 	if err != nil {
-		return nil, fmt.Errorf("mssql.NewConnector: %w", err)
+		return nil, fmt.Errorf("cloudsqlconn.NewDailer: %w", err)
 	}
 	dialer, err := cloudsqlconn.NewDialer(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("cloudsqlconn.NewDailer: %w", err)
 	}
-	usePrivate := ""
 	c.Dialer = &csqlDialer{
 		dialer:     dialer,
 		connName:   config.InstanceConnectionName,
-		usePrivate: usePrivate != "",
+		usePrivate: false,
 	}
-	dbPool := sql.OpenDB(c)
-	if err != nil {
-		return nil, fmt.Errorf("sql.Open: %w", err)
-	}
-	return dbPool, nil
+	db := sql.OpenDB(c)
+	return db, nil
 }
