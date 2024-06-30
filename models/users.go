@@ -34,14 +34,14 @@ func (us *UserService) Create(email, password string) (*User, error) {
 		Email:        email,
 		PasswordHash: hashedPassword,
 	}
-	// row := us.DB.QueryRow(`
-	// 	INSERT INTO users (email, password_hash)
-	// 	VALUES ($1,$2) RETURNING id`, email, hashedPassword)
-
 	row := us.DB.QueryRow(`
 		INSERT INTO users (email, password_hash)
-		OUTPUT INSERTED.id
-		VALUES (@email, @hashedPassword)`, sql.Named("email", email), sql.Named("hashedPassword", hashedPassword))
+		VALUES ($1,$2) RETURNING id`, email, hashedPassword)
+
+	// row := us.DB.QueryRow(`
+	// 	INSERT INTO users (email, password_hash)
+	// 	OUTPUT INSERTED.id
+	// 	VALUES (@email, @hashedPassword)`, sql.Named("email", email), sql.Named("hashedPassword", hashedPassword))
 
 	err = row.Scan(&user.ID)
 	if err != nil {
@@ -55,12 +55,12 @@ func (us *UserService) Login(email, password string) (*User, error) {
 	user := User{
 		Email: email,
 	}
-	// row := us.DB.QueryRow(`
-	// 	SELECT id, password_hash FROM users WHERE
-	// 	email = $1`, email)
 	row := us.DB.QueryRow(`
 		SELECT id, password_hash FROM users WHERE
-		email = @email`, sql.Named("email", email))
+		email = $1`, email)
+	// row := us.DB.QueryRow(`
+	// 	SELECT id, password_hash FROM users WHERE
+	// 	email = @email`, sql.Named("email", email))
 	err := row.Scan(&user.ID, &user.PasswordHash)
 	if err != nil {
 		return nil, fmt.Errorf("LOGIN : %w", err)
