@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/csrf"
 	"github.com/raminderis/lenslocked/controller"
 	"github.com/raminderis/lenslocked/models"
 	"github.com/raminderis/lenslocked/templates"
@@ -51,6 +52,7 @@ func main() {
 	))
 	r.Get("/signin", usersC.SignIn)
 	r.Post("/login", usersC.ProcessSignIn)
+	r.Get("/users/me", usersC.CurrentUser)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
@@ -61,7 +63,9 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	err = http.ListenAndServe(":"+port, r)
+	csrfKey := "6ydtr6eyr76qwouyehdfgdhsywegwtqh"
+	csrfMw := csrf.Protect([]byte(csrfKey), csrf.Secure(false))
+	err = http.ListenAndServe(":"+port, csrfMw(r))
 	if err != nil {
 		panic(err)
 	}
