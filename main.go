@@ -35,8 +35,13 @@ func main() {
 	userService := models.UserService{
 		DB: db,
 	}
+	sessionService := models.SessionService{
+		DB:            db,
+		BytesPerToken: 32,
+	}
 	usersC := controller.Users{
-		UserService: &userService,
+		UserService:    &userService,
+		SessionService: &sessionService,
 	}
 	usersC.Templates.New = views.Must(views.ParseFS(
 		templates.FS,
@@ -52,6 +57,7 @@ func main() {
 	))
 	r.Get("/signin", usersC.SignIn)
 	r.Post("/login", usersC.ProcessSignIn)
+	r.Post("/signout", usersC.ProcessSignOut)
 	r.Get("/users/me", usersC.CurrentUser)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
