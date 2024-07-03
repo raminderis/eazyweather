@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/csrf"
 	"github.com/raminderis/lenslocked/controller"
+	"github.com/raminderis/lenslocked/migrations"
 	"github.com/raminderis/lenslocked/models"
 	"github.com/raminderis/lenslocked/templates"
 	"github.com/raminderis/lenslocked/views"
@@ -25,6 +26,7 @@ func main() {
 		views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))
 
 	cfg := models.DefaultPostgresConfig()
+	fmt.Println(cfg.String())
 	db, err := models.Open(cfg)
 	// cfg := models.DefaultCloudSqlConfig()
 	// db, err := models.ConnectWithConnector(cfg)
@@ -32,10 +34,15 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
+
+	err = models.MigrateFS(db, migrations.FS, "")
+	if err != nil {
+		panic(err)
+	}
 	userService := models.UserService{
 		DB: db,
 	}
-	sessionService := models.SessionService{
+	sessionService := models.SessionService
 		DB:            db,
 		BytesPerToken: 32,
 	}
