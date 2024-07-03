@@ -15,16 +15,7 @@ import (
 )
 
 func main() {
-	r := chi.NewRouter()
-	r.Get("/", controller.StaticHandler(
-		views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))))
-
-	r.Get("/contact", controller.StaticHandler(
-		views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))))
-
-	r.Get("/faq", controller.FAQ(
-		views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))
-
+	//Setup the DB
 	cfg := models.DefaultPostgresConfig()
 	fmt.Println(cfg.String())
 	db, err := models.Open(cfg)
@@ -39,13 +30,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	//Setup Services
 	userService := models.UserService{
 		DB: db,
 	}
-	sessionService := models.SessionService
+	sessionService := models.SessionService{
 		DB:            db,
 		BytesPerToken: 32,
 	}
+
+	//Setup Middleware
+	umw := controller.UserMiddleware{
+		SessionService: &sessionService,
+	}
+	csrfKey := "6ydtr6eyr76qwouyehdfgdhsywegwtqh"
+	csrfMw := csrf.Protect([]byte(csrfKey), csrf.Secure(false))
+
+	//Setup controllers
 	usersC := controller.Users{
 		UserService:    &userService,
 		SessionService: &sessionService,
@@ -54,31 +56,41 @@ func main() {
 		templates.FS,
 		"signup.gohtml", "tailwind.gohtml",
 	))
-	r.Get("/signup", usersC.New)
-
-	r.Post("/users", usersC.Create)
-
 	usersC.Templates.SignIn = views.Must(views.ParseFS(
 		templates.FS,
 		"signin.gohtml", "tailwind.gohtml",
 	))
+
+	//Setup Router and Routes
+	r := chi.NewRouter()
+	r.Use(csrfMw)
+	r.Use(umw.SetUser)
+	r.Get("/", controller.StaticHandler(
+		views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))))
+	r.Get("/contact", controller.StaticHandler(
+		views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))))
+	r.Get("/faq", controller.FAQ(
+		views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))
+	r.Get("/signup", usersC.New)
+	r.Post("/users", usersC.Create)
 	r.Get("/signin", usersC.SignIn)
 	r.Post("/login", usersC.ProcessSignIn)
 	r.Post("/signout", usersC.ProcessSignOut)
-	r.Get("/users/me", usersC.CurrentUser)
-
+	r.Route("/users/me", func(r chi.Router) {
+		r.Use(umw.RequireUser)
+		r.Get("/", usersC.CurrentUser)
+	})
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	})
-	//var router Router
-	fmt.Println("LISTENING now on GAE default port of 8080")
+
+	//Start the Server
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "3000"
 	}
-	csrfKey := "6ydtr6eyr76qwouyehdfgdhsywegwtqh"
-	csrfMw := csrf.Protect([]byte(csrfKey), csrf.Secure(false))
-	err = http.ListenAndServe(":"+port, csrfMw(r))
+	fmt.Println("LISTENING now on: " + port)
+	err = http.ListenAndServe(":"+port, r)
 	if err != nil {
 		panic(err)
 	}
