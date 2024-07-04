@@ -3,3 +3,7 @@ lenslocked
 lenlocked 
 app.yaml
 go.sum
+mailtrap.txt
+
+#Env files
+.env
