@@ -51,6 +51,8 @@ func main() {
 	usersC := controller.Users{
 		UserService:    &userService,
 		SessionService: &sessionService,
+		//EmailService:         &emailService,
+		//PasswordResetService: &passwordResetService,
 	}
 	usersC.Templates.New = views.Must(views.ParseFS(
 		templates.FS,
@@ -60,7 +62,10 @@ func main() {
 		templates.FS,
 		"signin.gohtml", "tailwind.gohtml",
 	))
-
+	usersC.Templates.ForgotPassword = views.Must(views.ParseFS(
+		templates.FS,
+		"forgot-pw.gohtml", "tailwind.gohtml",
+	))
 	//Setup Router and Routes
 	r := chi.NewRouter()
 	r.Use(csrfMw)
@@ -76,6 +81,8 @@ func main() {
 	r.Get("/signin", usersC.SignIn)
 	r.Post("/login", usersC.ProcessSignIn)
 	r.Post("/signout", usersC.ProcessSignOut)
+	r.Get("/forgot-pw", usersC.ForgotPassword)
+	r.Post("/forgot-pw", usersC.ProcessForgotPassword)
 	r.Route("/users/me", func(r chi.Router) {
 		r.Use(umw.RequireUser)
 		r.Get("/", usersC.CurrentUser)
