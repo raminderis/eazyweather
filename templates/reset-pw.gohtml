@@ -1,0 +1,41 @@
+{{template "header" .}}
+<div class="py-12 flex justify-center ">
+    <div class="px-8 py-8 bg-white bg-red-50 rounded shadow">
+        <h1 class="pt-4 pb-8 text-center text-1xl font-bold text-gray-900"> 
+            Reset Your Password 
+        </h1>
+        <form action="/reset-pw" method="post">
+            <div class="hidden">
+                {{csrfField}}
+            </div>
+            <div class="py-4">
+                <label for="password" class="text-sm font-semibold text-gray-900">New Password</label>
+                <input name="password" id="password" type="password" placeholder="Password"
+                required class="w-full px-3 py-2 border border-grey-300 placeholder-gray-500
+                 text-gray-800 rounded"
+                autofocus/>
+            </div>
+            {{if .Token}}
+                <div class="hidden">
+                    <input type="hidden" id="token" name="token" value="{{.Token}}" />
+                </div>
+            {{else}}
+                <div class="py-4">
+                    <label for="token" class="text-sm font-semibold text-gray-900">Password Reset Token</label>
+                    <input name="token" id="token" type="text" placeholder="Check you email."
+                    required class="w-full px-3 py-2 border border-grey-300 placeholder-gray-500
+                    text-gray-800 rounded"/>
+                </div>
+            {{end}}
+            <div class="py-4">
+                <button type="submit" class="w-full px-4 py-2 bg-indigo-600 
+                hover:bg-indigo-700 text-white rounded font-bold text-lg">Update Password</button>
+            </div>
+            <div class="py-2 w-full flex justify-between">
+                <p class="text-xs text-gray-500"> Don't have an account? <a href="/signup" class="underline">Sign Up</a></p>
+                <p class="text-xs text-gray-500"><a href="/signin" class="underline">Sign In</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+{{template "footer" .}}

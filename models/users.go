@@ -73,3 +73,19 @@ func (us *UserService) Login(email, password string) (*User, error) {
 	fmt.Println("User login successful")
 	return &user, nil
 }
+
+func (us *UserService) UpdatePassword(userID uint, password string) error {
+	hashedBytePassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("update password : %w", err)
+	}
+	hashedPassword := string(hashedBytePassword)
+	_, err = us.DB.Exec(`
+		UPDATE users
+		SET password_hash = $2
+		WHERE id = $1;`, userID, hashedPassword)
+	if err != nil {
+		return fmt.Errorf("update password: %w", err)
+	}
+	return nil
+}
