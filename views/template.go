@@ -2,6 +2,7 @@ package views
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -14,17 +15,22 @@ import (
 	"github.com/raminderis/lenslocked/models"
 )
 
+type public interface {
+	Public() string
+}
+
 type Template struct {
 	htmlTpl *template.Template
 }
 
-func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface{}) {
+func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface{}, errs ...error) {
 	tpl, err := t.htmlTpl.Clone()
 	if err != nil {
 		log.Printf("cloning template: %v", err)
 		http.Error(w, "There was an error rendering the page", http.StatusInternalServerError)
 		return
 	}
+	errMsg := errMessages(errs...)
 	tpl = tpl.Funcs(
 		template.FuncMap{
 			"csrfField": func() template.HTML {
@@ -32,6 +38,9 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 			},
 			"currentUser": func() *models.User {
 				return context.User(r.Context())
+			},
+			"errors": func() []string {
+				return errMsg
 			},
 		},
 	)
@@ -55,6 +64,9 @@ func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
 			},
 			"currentUser": func() (template.HTML, error) {
 				return "", fmt.Errorf("currentUser not implemented")
+			},
+			"errors": func() []string {
+				return nil
 			},
 		},
 	)
@@ -82,4 +94,18 @@ func Must(tpl Template, err error) Template {
 		panic(err)
 	}
 	return tpl
+}
+
+func errMessages(errs ...error) []string {
+	var errMessages []string
+	for _, err := range errs {
+		var pubErr public
+		if errors.As(err, &pubErr) {
+			errMessages = append(errMessages, pubErr.Public())
+		} else {
+			fmt.Println(err)
+			errMessages = append(errMessages, "Something went wrong.")
+		}
+	}
+	return errMessages
 }

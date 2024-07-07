@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/raminderis/lenslocked/context"
+	"github.com/raminderis/lenslocked/errors"
 	"github.com/raminderis/lenslocked/models"
 )
 
@@ -40,17 +41,25 @@ func (u Users) SignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u Users) Create(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Email    string
+		Password string
+	}
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-	user, err := u.UserService.Create(email, password)
+	data.Email = r.FormValue("email")
+	data.Password = r.FormValue("password")
+	user, err := u.UserService.Create(data.Email, data.Password)
 	if err != nil {
-		fmt.Printf("User Create Failed : %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if errors.Is(err, models.ErrEmailTaken) {
+			err = errors.Public(err, "That email address is already associated with an account.")
+		}
+		u.Templates.New.Execute(w, r, data, err)
+		// fmt.Printf("User Create Failed : %v", err)
+		// http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	session, err := u.SessionService.Create(user.ID)
