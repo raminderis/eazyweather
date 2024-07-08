@@ -70,19 +70,26 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	err = run(cfg)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func run(cfg config) error {
 	//Setup the DB
 	//fmt.Println(cfg.PSQL)
 	db, err := models.Open(cfg.PSQL)
 	// cfg := models.DefaultCloudSqlConfig()
 	// db, err := models.ConnectWithConnector(cfg)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer db.Close()
 
 	err = models.MigrateFS(db, migrations.FS, "")
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	//Setup Services
@@ -150,10 +157,13 @@ func main() {
 	r.Post("/forgot-pw", usersC.ProcessForgotPassword)
 	r.Get("/reset-pw", usersC.ResetPassword)
 	r.Post("/reset-pw", usersC.ProcessResetPassword)
-	r.Route("/users/me", func(r chi.Router) {
-		r.Use(umw.RequireUser)
-		r.Get("/", usersC.CurrentUser)
-	})
+	// r.Route("/users/me", func(r chi.Router) {
+	// 	r.Use(umw.RequireUser)
+	// 	r.Get("/", usersC.CurrentUser)
+	// })
+	assetsHandler := http.FileServer(http.Dir("assets"))
+	r.Get("/assets/*", http.StripPrefix("/assets", assetsHandler).ServeHTTP)
+
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	})
@@ -161,8 +171,5 @@ func main() {
 	//Start the Server
 	port := cfg.Server.Address
 	fmt.Printf("LISTENING now on: %s...\n", port)
-	err = http.ListenAndServe(port, r)
-	if err != nil {
-		panic(err)
-	}
+	return http.ListenAndServe(port, r)
 }
