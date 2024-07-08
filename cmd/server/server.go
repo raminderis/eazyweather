@@ -35,8 +35,18 @@ func loadEnvConfig() (config, error) {
 		return cfg, err
 	}
 	//PSQL
-	cfg.PSQL = models.DefaultPostgresConfig()
-
+	//cfg.PSQL = models.DefaultPostgresConfig()
+	cfg.PSQL = models.PostgresConfig{
+		Host:     os.Getenv("PSQL_HOST"),
+		Port:     os.Getenv("PSQL_PORT"),
+		User:     os.Getenv("PSQL_USER"),
+		Password: os.Getenv("PSQL_PASSWORD"),
+		DBname:   os.Getenv("PSQL_DATABASE"),
+		SSLMode:  os.Getenv("PSQL_SSLMODE"),
+	}
+	if cfg.PSQL.Host == "" || cfg.PSQL.Port == "" {
+		return cfg, fmt.Errorf("no psql config provided")
+	}
 	//SMTP
 	cfg.SMTP.Host = os.Getenv("SMTP_HOST")
 	portStr := os.Getenv("SMTP_PORT")
@@ -48,10 +58,10 @@ func loadEnvConfig() (config, error) {
 	cfg.SMTP.Password = os.Getenv("SMTP_PASSWORD")
 
 	//CSRF
-	cfg.CSRF.Key = "6ydtr6eyr76qwouyehdfgdhsywegwtqh"
-	cfg.CSRF.Secure = false
+	cfg.CSRF.Key = os.Getenv("CSRF_KEY")
+	cfg.CSRF.Secure = os.Getenv("CSRF_SECURE") == "true"
 	//Server
-	cfg.Server.Address = ":3000"
+	cfg.Server.Address = os.Getenv("SERVER_ADDRESS")
 	return cfg, nil
 }
 
@@ -61,6 +71,7 @@ func main() {
 		panic(err)
 	}
 	//Setup the DB
+	//fmt.Println(cfg.PSQL)
 	db, err := models.Open(cfg.PSQL)
 	// cfg := models.DefaultCloudSqlConfig()
 	// db, err := models.ConnectWithConnector(cfg)
