@@ -7,3 +7,6 @@ mailtrap.txt
 
 #Env files
 .env
+
+#Node stuff
+node_modules/
