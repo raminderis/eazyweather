@@ -52,10 +52,10 @@ func (es *EmailService) Send(email Email) error {
 		msg.SetBody("text/html", email.HTMLtext)
 	}
 	fmt.Println(msg)
-	// err := es.dialer.DialAndSend(msg)
-	// if err != nil {
-	// 	return fmt.Errorf("send: %w", err)
-	// }
+	err := es.dialer.DialAndSend(msg)
+	if err != nil {
+		return fmt.Errorf("send: %w", err)
+	}
 	return nil
 }
 
