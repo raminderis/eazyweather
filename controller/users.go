@@ -26,7 +26,7 @@ type Users struct {
 	SessionService       *models.SessionService
 	PasswordResetService *models.PasswordResetService
 	EmailService         *models.EmailService
-	CityTempService      *models.CityTempService
+	CityTempS            *models.CityTempS
 }
 
 func (u Users) New(w http.ResponseWriter, r *http.Request) {
@@ -177,7 +177,7 @@ func (u Users) ProcessCityTemp(w http.ResponseWriter, r *http.Request) {
 	data.City = r.FormValue("city")
 	data.ApiToken = os.Getenv("OPENWEATHER_TOKEN")
 	//strings.ToUpper(r.FormValue("city"))
-	cityTemp, err := u.CityTempService.Communicate(data.City, data.ApiToken)
+	cityTemp, err := u.CityTempS.Communicate(data.City, data.ApiToken)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "processing city temp has an error "+fmt.Sprint(err), http.StatusInternalServerError)

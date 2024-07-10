@@ -107,11 +107,6 @@ func (us *UserService) UpdatePassword(userID uint, password string) error {
 	return nil
 }
 
-const (
-	WeatherUrl     = "www.weather.com"
-	WeatherUrlAuth = ""
-)
-
 type OpenWeatherConfig struct {
 	Domain     string
 	Path       string
@@ -119,39 +114,29 @@ type OpenWeatherConfig struct {
 	QueryAppid string
 }
 
-type CityTemp struct {
+type CityTempS struct {
 	Temp     string
 	Humidity string
 	Time     string
 }
 
-type CityTempService struct {
-	URL string
-}
-
-func (us *CityTempService) DefaultOpenWeatherConfig() OpenWeatherConfig {
+func DefaultOpenWeatherConfig() OpenWeatherConfig {
 	return OpenWeatherConfig{
 		Domain: "api.openweathermap.org",
 		Path:   "/data/2.5/weather",
 	}
 }
 
-func (us *CityTempService) CityTempService(config OpenWeatherConfig) *CityTempService {
-	cts := CityTempService{
-		URL: fmt.Sprintf("https://%s%s?q=%s&appid=%s", config.Domain, config.Path, config.QueryCity, config.QueryAppid),
-	}
-	return &cts
-}
-
-func (us *CityTempService) Communicate(city, apiToken string) (*CityTemp, error) {
-	cityTemp := CityTemp{}
-	cityTemp.Time = time.Now().Format(time.RFC3339)
-	urlConfig := us.DefaultOpenWeatherConfig()
+func OpenWeatherUrlGenerator(city, apiToken string) string {
+	urlConfig := DefaultOpenWeatherConfig()
 	urlConfig.QueryCity = city
 	urlConfig.QueryAppid = apiToken
-	cts := us.CityTempService(urlConfig)
+	return fmt.Sprintf("https://%s%s?q=%s&appid=%s", urlConfig.Domain, urlConfig.Path, urlConfig.QueryCity, urlConfig.QueryAppid)
+}
+
+func (us *CityTempS) Communicate(city, apiToken string) (*CityTempS, error) {
 	//send query to openweahter
-	requestURL := cts.URL
+	requestURL := OpenWeatherUrlGenerator(city, apiToken)
 	fmt.Println(requestURL)
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 	if err != nil {
@@ -181,6 +166,8 @@ func (us *CityTempService) Communicate(city, apiToken string) (*CityTemp, error)
 		fmt.Printf("Communicate: could not unmarshal response body: %s\n", err)
 		return nil, fmt.Errorf("Communicate : %w", err)
 	}
+	cityTemp := CityTempS{}
+	cityTemp.Time = time.Now().Format(time.RFC3339)
 	for key, value := range jsonResponse {
 		//fmt.Println("Open Weather Response : ", key, value)
 		if key == "main" {
