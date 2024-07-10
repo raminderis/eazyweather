@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 	"strings"
 	"time"
 
@@ -113,6 +112,13 @@ const (
 	WeatherUrlAuth = ""
 )
 
+type OpenWeatherConfig struct {
+	Domain     string
+	Path       string
+	QueryCity  string
+	QueryAppid string
+}
+
 type CityTemp struct {
 	Temp     string
 	Humidity string
@@ -120,17 +126,33 @@ type CityTemp struct {
 }
 
 type CityTempService struct {
-	DB            *sql.DB
-	BytesPerToken int
-	Duration      time.Duration
+	URL string
 }
 
-func (us *CityTempService) Communicate(city string) (*CityTemp, error) {
+func (us *CityTempService) DefaultOpenWeatherConfig() OpenWeatherConfig {
+	return OpenWeatherConfig{
+		Domain: "api.openweathermap.org",
+		Path:   "/data/2.5/weather",
+	}
+}
+
+func (us *CityTempService) CityTempService(config OpenWeatherConfig) *CityTempService {
+	cts := CityTempService{
+		URL: fmt.Sprintf("https://%s%s?q=%s&appid=%s", config.Domain, config.Path, config.QueryCity, config.QueryAppid),
+	}
+	return &cts
+}
+
+func (us *CityTempService) Communicate(city, apiToken string) (*CityTemp, error) {
 	cityTemp := CityTemp{}
 	cityTemp.Time = time.Now().Format(time.RFC3339)
-
+	urlConfig := us.DefaultOpenWeatherConfig()
+	urlConfig.QueryCity = city
+	urlConfig.QueryAppid = apiToken
+	cts := us.CityTempService(urlConfig)
 	//send query to openweahter
-	requestURL := "https://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=9682880224b6a80bc7359f1bc0d27224"
+	requestURL := cts.URL
+	fmt.Println(requestURL)
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 	if err != nil {
 		fmt.Printf("Communicate: could not create request: %s\n", err)
@@ -143,30 +165,21 @@ func (us *CityTempService) Communicate(city string) (*CityTemp, error) {
 		return nil, fmt.Errorf("Communicate : %w", err)
 	}
 
-	fmt.Printf("client: got response!\n")
-	fmt.Printf("client: status code: %d\n", res.StatusCode)
-
+	if res.StatusCode != 200 {
+		originalErr := errors.New("city details unavailable")
+		return nil, fmt.Errorf("Communicate : %v", originalErr)
+	}
 	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Printf("Communicate: could not read response body: %s\n", err)
 		return nil, fmt.Errorf("Communicate : %w", err)
 	}
 
-	fmt.Printf("Communicate: response body: %s\n", resBody)
 	var jsonResponse map[string]interface{}
 	err = json.Unmarshal(resBody, &jsonResponse)
 	if err != nil {
 		fmt.Printf("Communicate: could not unmarshal response body: %s\n", err)
 		return nil, fmt.Errorf("Communicate : %w", err)
-	}
-	for key, value := range jsonResponse {
-		if key == "cod" {
-			if fmt.Sprint(reflect.TypeOf(value)) == "string" {
-				fmt.Println("no 200  OK")
-				originalErr := errors.New("no city by this name")
-				return nil, fmt.Errorf("\nCommunicate : , %v", originalErr)
-			}
-		}
 	}
 	for key, value := range jsonResponse {
 		//fmt.Println("Open Weather Response : ", key, value)
@@ -181,26 +194,24 @@ func (us *CityTempService) Communicate(city string) (*CityTemp, error) {
 			// Now you can access specific fields within the 'main' data
 			temperature, tempExists := mainData["temp"].(float64)
 			if tempExists {
-				fmt.Printf("Temperature: %.2f°C\n", temperature-273.15)
 				cityTemp.Temp = fmt.Sprintf("%.2f", temperature-273.15)
 
 			} else {
 				fmt.Println("Temperature data not found")
-				return nil, fmt.Errorf("Communicate : %w", err)
+				cityTemp.Temp = "Unknown"
 			}
 
 			humidity, humidityExists := mainData["humidity"].(float64)
 			if humidityExists {
-				fmt.Printf("Humidity: %.2f\n", humidity)
 				cityTemp.Humidity = fmt.Sprintf("%.2f", humidity)
 
 			} else {
 				fmt.Println("Humidity data not found")
-				return nil, fmt.Errorf("Communicate : %w", err)
+				cityTemp.Humidity = "Unknown"
 			}
 			// Handle other fields similarly (e.g., humidity, pressure, etc.)
 		}
 	}
-	fmt.Println(cityTemp.Temp)
+	// fmt.Println(cityTemp.Temp)
 	return &cityTemp, nil
 }

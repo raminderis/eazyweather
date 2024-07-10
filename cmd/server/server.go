@@ -104,7 +104,6 @@ func run(cfg config) error {
 	passwordResetService := &models.PasswordResetService{
 		DB: db,
 	}
-
 	//Setup Middleware
 	umw := controller.UserMiddleware{
 		SessionService: sessionService,

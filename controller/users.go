@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/raminderis/lenslocked/context"
@@ -168,16 +169,18 @@ func (u Users) CityTemp(w http.ResponseWriter, r *http.Request) {
 func (u Users) ProcessCityTemp(w http.ResponseWriter, r *http.Request) {
 	var data struct {
 		City         string
+		ApiToken     string
 		CityTemp     string
 		CityHumidity string
 		Time         string
 	}
 	data.City = r.FormValue("city")
+	data.ApiToken = os.Getenv("OPENWEATHER_TOKEN")
 	//strings.ToUpper(r.FormValue("city"))
-	cityTemp, err := u.CityTempService.Communicate(data.City)
+	cityTemp, err := u.CityTempService.Communicate(data.City, data.ApiToken)
 	if err != nil {
-		fmt.Println("processing citytemp has an error: ", err)
-		http.Error(w, "processing citytemp has an error"+fmt.Sprint(err), http.StatusInternalServerError)
+		fmt.Println(err)
+		http.Error(w, "processing city temp has an error "+fmt.Sprint(err), http.StatusInternalServerError)
 		return
 	}
 
