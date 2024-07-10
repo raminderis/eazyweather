@@ -24,6 +24,7 @@ services:
       - 443:443
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
+      - ~/data/eazyweather.com/caddy:/data/caddy
     logging: *highlight-logging
 
   db:
