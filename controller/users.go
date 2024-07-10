@@ -17,6 +17,7 @@ type Users struct {
 		ForgotPassword Template
 		CheckYourEmail Template
 		ResetPassword  Template
+		CityTemp       Template
 	}
 	UserService          *models.UserService
 	SessionService       *models.SessionService
@@ -151,6 +152,20 @@ func (u Users) ProcessForgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u.Templates.CheckYourEmail.Execute(w, r, data)
+}
+
+func (u Users) CityTemp(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		City string
+	}
+	data.City = r.FormValue("city")
+	u.Templates.CityTemp.Execute(w, r, data)
+}
+
+func (u Users) ProcessCityTemp(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("process city temp to be implemented here")
+	http.Error(w, "process city temp to be implemented here", http.StatusServiceUnavailable)
+	return
 }
 
 func (u Users) ResetPassword(w http.ResponseWriter, r *http.Request) {

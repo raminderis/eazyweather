@@ -138,6 +138,10 @@ func run(cfg config) error {
 		templates.FS,
 		"reset-pw.gohtml", "tailwind.gohtml",
 	))
+	usersC.Templates.CityTemp = views.Must(views.ParseFS(
+		templates.FS,
+		"citytemp.gohtml", "tailwind.gohtml",
+	))
 	//Setup Router and Routes
 	r := chi.NewRouter()
 	r.Use(csrfMw)
@@ -157,6 +161,8 @@ func run(cfg config) error {
 	r.Post("/forgot-pw", usersC.ProcessForgotPassword)
 	r.Get("/reset-pw", usersC.ResetPassword)
 	r.Post("/reset-pw", usersC.ProcessResetPassword)
+	r.Get("/citytemp", usersC.CityTemp)
+	r.Post("/citytemp", usersC.ProcessCityTemp)
 	// r.Route("/users/me", func(r chi.Router) {
 	// 	r.Use(umw.RequireUser)
 	// 	r.Get("/", usersC.CurrentUser)
