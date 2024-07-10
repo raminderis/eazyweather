@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/raminderis/lenslocked/context"
 	"github.com/raminderis/lenslocked/errors"
@@ -18,11 +19,13 @@ type Users struct {
 		CheckYourEmail Template
 		ResetPassword  Template
 		CityTemp       Template
+		ShowCityTemp   Template
 	}
 	UserService          *models.UserService
 	SessionService       *models.SessionService
 	PasswordResetService *models.PasswordResetService
 	EmailService         *models.EmailService
+	CityTempService      *models.CityTempService
 }
 
 func (u Users) New(w http.ResponseWriter, r *http.Request) {
@@ -163,9 +166,26 @@ func (u Users) CityTemp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u Users) ProcessCityTemp(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("process city temp to be implemented here")
-	http.Error(w, "process city temp to be implemented here", http.StatusServiceUnavailable)
-	return
+	var data struct {
+		City         string
+		CityTemp     string
+		CityHumidity string
+		Time         string
+	}
+	data.City = r.FormValue("city")
+	//strings.ToUpper(r.FormValue("city"))
+	cityTemp, err := u.CityTempService.Communicate(data.City)
+	if err != nil {
+		fmt.Println("processing citytemp has an error: ", err)
+		http.Error(w, "processing citytemp has an error"+fmt.Sprint(err), http.StatusInternalServerError)
+		return
+	}
+
+	data.City = strings.ToUpper(r.FormValue("city")[:1]) + strings.ToLower(r.FormValue("city")[1:])
+	data.CityHumidity = cityTemp.Humidity
+	data.CityTemp = cityTemp.Temp
+	data.Time = cityTemp.Time
+	u.Templates.ShowCityTemp.Execute(w, r, data)
 }
 
 func (u Users) ResetPassword(w http.ResponseWriter, r *http.Request) {

@@ -142,6 +142,10 @@ func run(cfg config) error {
 		templates.FS,
 		"citytemp.gohtml", "tailwind.gohtml",
 	))
+	usersC.Templates.ShowCityTemp = views.Must(views.ParseFS(
+		templates.FS,
+		"showcitytemp.gohtml", "tailwind.gohtml",
+	))
 	//Setup Router and Routes
 	r := chi.NewRouter()
 	r.Use(csrfMw)

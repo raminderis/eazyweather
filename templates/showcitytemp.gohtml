@@ -1,0 +1,15 @@
+{{template "header" .}}
+<div class="py-12 flex justify-center ">
+    <div class="px-8 py-8 bg-white bg-red-50 rounded shadow">
+        <h1 class="pt-4 pb-8 text-center text-1xl font-bold text-gray-900"> 
+            City Weather Response!
+        </h1>
+        <p class ="text-l text-gray-600 pb-4">
+            City: {{.City}}<br>
+            City Temp: {{.CityTemp}} <br>
+            City Humidity: {{.CityHumidity}} <br>
+            Time Temp Was Recorded: {{.Time}} <br>
+        </p>
+    </div>
+</div>
+{{template "footer" .}}
