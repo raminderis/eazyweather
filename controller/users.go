@@ -180,7 +180,9 @@ func (u Users) ProcessCityTemp(w http.ResponseWriter, r *http.Request) {
 	cityTemp, err := u.CityTempS.Communicate(data.City, data.ApiToken)
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "processing city temp has an error "+fmt.Sprint(err), http.StatusInternalServerError)
+		//http.Error(w, "processing city temp has an error "+fmt.Sprint(err), http.StatusInternalServerError)
+		err = errors.Public(err, "CIty Details Unavailable.")
+		u.Templates.CityTemp.Execute(w, r, data, err)
 		return
 	}
 
